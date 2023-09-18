@@ -40,7 +40,7 @@ const Notifications = () => {
           color: "rgb(255 57 82)",
           right: "0",
           transform: "translateX(100%)",
-          bottom: "50px",
+          top: "50px",
           cursor: "pointer",
           padding: "0.2rem",
           background: "transparent",
@@ -72,11 +72,12 @@ const Notifications = () => {
           padding: "0.5rem",
         }}
       >
-        {notifications.noti.map((item) => {
+        {notifications.noti.map((item, i) => {
           return (
             <NotificationMessage
               order_id={item.order_id}
               type={item.type}
+              key={i}
             ></NotificationMessage>
           );
         })}

@@ -1,37 +1,89 @@
 import React, { useState } from "react";
 import { Box, Button, Paper, Stack } from "@mui/material";
 import SubOrder from "./SubOrder";
-import Timer from "./Timer";
 import { request } from "../api/request";
-// import Timer from "./Timer";
+import Timer from "./Timer";
+import { green } from "@mui/material/colors";
 
-const Order = ({ order }) => {
-  const [state, setState] = useState(order.status);
+const Order = ({ order, setStateFilter, setInfo, filterState }) => {
+  const [orderState, setOrderState] = useState(order.status);
+
   let status = {};
-  if (state === 1) {
+
+  if (orderState === 1) {
     status.color = "#61b2e4";
     status.state = "new";
-  } else if (state === 2) {
+  } else if (orderState === 2) {
     status.color = "#83bf4f";
-    status.state = "change";
+    status.state = "preparing";
   } else {
     status.color = "#dc0d28";
     status.state = "delay";
   }
-
+  console.log(order);
+  const makeOrderDone = () => {
+    setInfo((prev) => {
+      return { ...prev, isLoading: true };
+    });
+    request({
+      url: `/order/ChangeToDone/${order.order_id}`,
+      method: "POST",
+    })
+      .then((resp) => {
+        console.log(resp);
+        setStateFilter("new");
+        setInfo((prev) => {
+          return { ...prev, isLoading: false };
+        });
+      })
+      .catch();
+  };
   const makeOrderStartPreparing = () => {
+    setInfo((prev) => {
+      return { ...prev, isLoading: true };
+    });
     request({
       url: `/order/ChangeToPrepare/${order.order_id}`,
       method: "POST",
     })
       .then((resp) => {
         console.log(resp);
+        setStateFilter("onGoing");
+        // setInfo((prev) => {
+        //   return { ...prev, isLoading: false };
+        // });
       })
       .catch();
   };
+
+  const deleteOrder = () => {
+    setInfo((prev) => {
+      return { ...prev, isLoading: true };
+    });
+    request({
+      url: `/order/${order.order_id}`,
+      method: "DELETE",
+    })
+      .then((resp) => {
+        console.log(resp);
+        setInfo((prev) => {
+          return { ...prev, isLoading: false };
+        });
+      })
+      .catch();
+  };
+
   return (
     <Box sx={{ padding: "1rem" }}>
-      <Paper sx={{ padding: "1rem", borderRadius: "10px" }}>
+      <Paper
+        sx={{
+          padding: "1rem",
+          borderRadius: "10px",
+          border: `${order.isNew ? "3px solid" : "none"}`,
+          borderColor: green["200"],
+          boxShadow: order.isNew ? `0 2px 18px 3px ${green["300"]}` : "none",
+        }}
+      >
         <Stack
           p={1}
           alignItems={"center"}
@@ -41,14 +93,19 @@ const Order = ({ order }) => {
         >
           <Box sx={{ fontWeight: "bold" }}>Table : {order.table_id}</Box>
           <Box sx={{ fontWeight: "bold" }}>Order id : {order.order_id}</Box>
-          <Box sx={{ fontWeight: "bold" }}>
-            Timer :{" "}
-            <Timer
-              setState={setState}
-              order_id={order.order_id}
-              seconds={150000}
-            />
-          </Box>
+          {filterState === "onGoing" && (
+            <Box sx={{ fontWeight: "bold" }}>
+              Timer :{" "}
+              <Timer
+                setState={setOrderState}
+                order_id={order.order_id}
+                estimatedTime={order.timer}
+                create_at={
+                  "Mon Sep 18 2023 02:36:06 GMT-0300 (Chile Summer Time)"
+                }
+              />
+            </Box>
+          )}
         </Stack>
         <Stack
           flexWrap={"wrap"}
@@ -92,27 +149,32 @@ const Order = ({ order }) => {
             borderRadius: "5px",
             transition: "0.2s",
           }}
-          onClick={makeOrderStartPreparing}
+          onClick={
+            filterState === "new" ? makeOrderStartPreparing : makeOrderDone
+          }
         >
-          Ok
+          {filterState === "new" ? "start preparing" : "done"}
         </Button>
-        <Button
-          variant="error"
-          style={{
-            color: "#fff",
-            fontWeight: "bold",
-            backgroundColor: "rgb(255, 77, 100)",
-            width: "100%",
-            outline: "none",
-            border: "none",
-            padding: "0.7rem ",
-            margin: "1rem 0  0",
-            borderRadius: "5px",
-            transition: "0.2s",
-          }}
-        >
-          Delete
-        </Button>
+        {filterState === "new" && (
+          <Button
+            variant="error"
+            style={{
+              color: "#fff",
+              fontWeight: "bold",
+              backgroundColor: "rgb(255, 77, 100)",
+              width: "100%",
+              outline: "none",
+              border: "none",
+              padding: "0.7rem ",
+              margin: "1rem 0  0",
+              borderRadius: "5px",
+              transition: "0.2s",
+            }}
+            onClick={deleteOrder}
+          >
+            Delete
+          </Button>
+        )}
       </Stack>
     </Box>
   );
