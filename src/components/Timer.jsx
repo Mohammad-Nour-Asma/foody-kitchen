@@ -5,44 +5,64 @@ import { useDispatch } from "react-redux";
 const Timer = ({ estimatedTime, create_at, setState, order_id }) => {
   const [timeLeft, setTimeLeft] = useState(estimatedTime);
   const dispatch = useDispatch();
-  console.log(create_at);
+
   // set the timer to its previous state
   useEffect(() => {
     const create = new Date(create_at);
     const now = new Date();
+
     const createHour = create.getHours();
     const createMinut = create.getMinutes();
     const createSecond = create.getSeconds();
 
     const nowDay = now.getDay();
 
-    now.setHours(now.getHours() - createHour);
-    now.setMinutes(now.getMinutes() - createMinut);
-    now.setSeconds(now.getSeconds() - createSecond);
+    const hourNow = now.getHours();
+    const minutNow = now.getMinutes();
+    const secondsNow = now.getSeconds();
 
-    const diffHours = now.getHours();
-    const diffMinuts = now.getMinutes();
-    const diffSecond = now.getSeconds();
+    const diffHours = hourNow - createHour;
+    const diffMinuts = createMinut - minutNow;
+    const diffSecond = createSecond - secondsNow;
+
+    console.log(diffHours, diffMinuts, diffSecond);
 
     // Estimated Time
     const estimatedArr = estimatedTime.split(":");
     const estimated = new Date();
     estimated.setHours(estimatedArr[0], estimatedArr[1], estimatedArr[2]);
+
     const day = estimated.getDay();
 
-    if (nowDay === now.getDay()) {
-      estimated.setSeconds(estimated.getSeconds() - diffSecond);
-      estimated.setMinutes(estimated.getMinutes() - diffMinuts);
-      estimated.setHours(estimated.getHours() - diffHours);
-    }
+    let estimatedHour = +estimatedArr[0];
+    let estimatedMinuts = +estimatedArr[1];
+    let estimatedSecond = +estimatedArr[2];
 
-    if (estimated.getDay() === day) {
-      const startFrom = `${estimated.getHours()}:${estimated.getMinutes()}:${estimated.getSeconds()}`;
+    const estimatedTimeInSeconds =
+      +estimatedHour * 3600 + estimatedMinuts * 60 + estimatedSecond;
 
-      setTimeLeft(startFrom);
-    } else {
+    const differentInSeconds =
+      Math.abs(diffHours) * 3600 +
+      Math.abs(diffMinuts) * 60 +
+      Math.abs(diffSecond);
+
+    console.log(estimatedTimeInSeconds - differentInSeconds);
+
+    estimatedHour = +estimatedHour - Math.abs(diffHours);
+    estimatedMinuts = +estimatedMinuts - Math.abs(diffMinuts);
+    estimatedSecond = +estimatedSecond - Math.abs(diffSecond);
+
+    console.log(estimatedHour, estimatedMinuts, estimatedSecond);
+
+    if (estimatedTimeInSeconds - differentInSeconds < 0) {
       setTimeLeft("00:00:00");
       setState(3);
+    } else {
+      const startFrom = convertSecondsToTime(
+        estimatedTimeInSeconds - differentInSeconds
+      );
+
+      setTimeLeft(startFrom);
     }
   }, []);
 
@@ -84,3 +104,15 @@ const Timer = ({ estimatedTime, create_at, setState, order_id }) => {
 };
 
 export default Timer;
+
+function convertSecondsToTime(given_seconds) {
+  const hours = Math.floor(given_seconds / 3600);
+  const minutes = Math.floor((given_seconds - hours * 3600) / 60);
+  const seconds = given_seconds - hours * 3600 - minutes * 60;
+
+  const hoursString = hours.toString().padStart(2, "0");
+  const minutesString = minutes.toString().padStart(2, "0");
+  const secondsString = seconds.toString().padStart(2, "0");
+
+  return `${hoursString}:${minutesString}:${secondsString}`;
+}

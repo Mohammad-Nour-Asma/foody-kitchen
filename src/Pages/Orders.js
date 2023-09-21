@@ -32,8 +32,8 @@ const Orders = () => {
 
   const getOrders = () => {
     let api = "";
-    if (state === "new") api = "/orders/kitchen";
-    else if (state === "onGoing") api = "/getToDone";
+    if (state === "new") api = "/orders/kitchen/1";
+    else if (state === "onGoing") api = "/getToDone/1";
     setInfo((prev) => {
       return { ...prev, isLoading: true };
     });
@@ -58,7 +58,7 @@ const Orders = () => {
       cluster: "mt1",
     });
 
-    const channel = pusher.subscribe("order");
+    const channel = pusher.subscribe("order.1");
 
     channel.bind("newOrder", (data) => {
       dispatch(addNotification({ order_id: data.order.id, type: "new" }));
@@ -76,7 +76,7 @@ const Orders = () => {
       pusher.disconnect();
     };
   }, []);
-  console.log(state);
+  console.log(info.orders);
   return (
     <Box
       sx={{
@@ -161,25 +161,26 @@ const Orders = () => {
       ) : (
         <Grid justifyContent={"start"} container>
           {info?.orders?.map((order1) => {
+            console.log(order1, " order");
             const order = {
               table_id: order1.table.table_num,
               isNew: order1.isNew,
               order_id: order1.id,
-              timer: order1.time,
+              timer: order1.estimatedForOrder,
               status: order1.status,
-              order_time: "not returned",
+              order_time: order1.created_at,
+              time_start: order1.time_start,
               subOrders: order1.products.map((item) => {
                 return {
                   name: item.name,
                   amount: item.qty,
-                  note: "lorem ipsum ukiwn ont in ioqn ",
+                  note: item.note,
                   ingre: item.extra.map((ingredient) => {
                     return { name: ingredient.name };
                   }),
                 };
               }),
             };
-            console.log(order1.status);
             return (
               <Grid item md={6} sm={12} xs={12}>
                 <Order

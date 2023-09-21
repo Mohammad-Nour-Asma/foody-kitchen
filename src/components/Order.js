@@ -10,7 +10,10 @@ const Order = ({ order, setStateFilter, setInfo, filterState }) => {
 
   let status = {};
 
-  if (orderState === 1) {
+  if (order.table_id == "1111") {
+    status.color = "rgb(123 79 191)";
+    status.state = "OUT DOOR";
+  } else if (orderState === 1) {
     status.color = "#61b2e4";
     status.state = "new";
   } else if (orderState === 2) {
@@ -49,9 +52,6 @@ const Order = ({ order, setStateFilter, setInfo, filterState }) => {
       .then((resp) => {
         console.log(resp);
         setStateFilter("onGoing");
-        // setInfo((prev) => {
-        //   return { ...prev, isLoading: false };
-        // });
       })
       .catch();
   };
@@ -100,9 +100,7 @@ const Order = ({ order, setStateFilter, setInfo, filterState }) => {
                 setState={setOrderState}
                 order_id={order.order_id}
                 estimatedTime={order.timer}
-                create_at={
-                  "Mon Sep 18 2023 02:36:06 GMT-0300 (Chile Summer Time)"
-                }
+                create_at={order.time_start}
               />
             </Box>
           )}
